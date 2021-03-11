@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const checkAuth = require('../../middleware/auth-check');
 const sql = require('mssql');
 const authCheck = require('../../middleware/auth-check');
 const jwt = require('jsonwebtoken');
@@ -20,7 +19,24 @@ router.get('/', authCheck, (req, res) =>{
   })()
 });
 
-router.post('/', checkAuth, (req,res) => {
+router.get('/:code', authCheck, (req, res) =>{
+  (async function(){
+    try {
+      const code = req.params.code;
+      const sqlRequest = new sql.Request();
+      sqlRequest.input('code', code);
+      const sqlQuery = `
+        SELECT * FROM Classes WHERE Code = @code;
+      `;
+      const result = await sqlRequest.query(sqlQuery);
+      res.status(200).json(result.recordset);
+    } catch (error) {
+      res.status(500).json(error.originalError.info.message);
+    }
+  })()
+});
+
+router.post('/', authCheck, (req,res) => {
   (async function(){
     try {
       const sqlRequest = new sql.Request();

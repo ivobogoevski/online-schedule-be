@@ -3,7 +3,11 @@ const router = express.Router();
 const sql = require('mssql');
 const authCheck = require('../../middleware/auth-check');
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 
+// ADD NEW TEACHER
 router.post('/', authCheck, (req, res) => {
   (async function(){
     try {
@@ -25,6 +29,50 @@ router.post('/', authCheck, (req, res) => {
   })()
 });
 
+// GET ALL CLASSES ASSIGNED TO TEACHER
+router.get('/classes', authCheck, (req, res) => {
+  (async function(){
+    try {
+      const userId = jwt.verify(req.headers.authorization, process.env.SECRET_KEY).UserID;
+      const sqlRequest = new sql.Request();
+      sqlRequest.input('userId', userId);
+      const sqlQuery = `
+      SELECT
+        c.Name as 'Name',
+        c.Code AS 'Code',
+        c.Classroom AS 'Classroom',
+        c.ClassDate AS 'ClassDate',
+        c.ExerciseRoom AS 'ExerciseRoom',
+        c.ExerciseDate AS 'ExerciseDate',
+        c.Semester AS 'Semester',
+        c.Study AS 'Study',
+        t.Name AS 'TeacherName',
+        t.TeacherId AS 'TeacherId'
+      FROM Teachers as t
+        inner join TeacherClasses as tc on (tc.TeacherId = t.TeacherId)
+        inner join Classes as c on (tc.ClassCode = c.Code)
+      WHERE
+        t.TeacherID = @userId
+      `;
+
+      const result = await sqlRequest.query(sqlQuery);
+      const response = [];
+      result.recordset.forEach( r => {
+        r.Teacher = {};
+        r.Teacher.Name = r.TeacherName;
+        r.Teacher.TeacherId = r.TeacherId;
+        delete r.TeacherName;
+        delete r.TeacherId;
+        response.push(r);
+      });
+      res.status(200).json(response);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  })()
+});
+
+// ASSIGN CLASS TO TEACHER
 router.post('/assign/class', authCheck, (req, res) => {
   (async function(){
     try {

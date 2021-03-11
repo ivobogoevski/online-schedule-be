@@ -4,7 +4,6 @@ const sql = require('mssql');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const checkAuth = require('../../middleware/auth-check');
-const authCheck = require('../../middleware/auth-check');
 dotenv.config();
 
 router.get('/classes', checkAuth, (req, res) => {
@@ -90,7 +89,7 @@ router.get('/classes/available', checkAuth, (req, res) => {
   })()
 });
 
-router.post('/assign/classes', authCheck, (req, res) => {
+router.post('/assign/classes', checkAuth, (req, res) => {
   (async function(){
     try {
       const userId = jwt.verify(req.headers.authorization, process.env.SECRET_KEY).UserID;
