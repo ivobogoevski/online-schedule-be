@@ -43,8 +43,8 @@ router.get('/', authCheck, (req,res) => {
       r.Teacher.TeacherId = r.TeacherId;
       r.Exam = {};
       r.Exam.Classroom = r.Classroom;
-      r.Exam.Date = r.Date;
-      r.Exam.Type = r.ExamType;
+      r.Exam.ExamDate = r.Date;
+      r.Exam.ExamType = r.ExamType;
       delete r.TeacherName;
       delete r.TeacherId;
       delete r.Classroom;
@@ -54,6 +54,78 @@ router.get('/', authCheck, (req,res) => {
     });
     res.status(200).json(response);
     } catch (error) {
+      handleError(error, res);
+    }
+  })();
+});
+
+router.get('/class/:code', authCheck, (req,res) => {
+  (async function(){
+    try {
+      const sqlReq = new sql.Request();
+      sqlReq.input('classCode', req.params.code);
+    
+      const sqlQuery = 'SELECT * FROM Exams WHERE ClassCode = @classCode';
+      const result = await sqlReq.query(sqlQuery);
+      res.status(200).json(result.recordset);
+    } catch (error) {
+      handleError(error, res);
+    }
+  })();
+});
+
+router.post('/', authCheck, (req,res) => {
+  (async function(){
+    try {
+      const sqlReq = new sql.Request();
+      sqlReq.input('ExamDate', req.body.ExamDate);
+      sqlReq.input('Classroom', req.body.Classroom);
+      sqlReq.input('ExamType', req.body.ExamType);
+      sqlReq.input('ClassCode', req.body.ClassCode);
+    
+      const sqlQuery = `INSERT INTO Exams (ExamDate, Classroom, ExamType, ClassCode) 
+      VALUES (@ExamDate, @Classroom, @ExamType, @ClassCode)`;
+      const result = await sqlReq.query(sqlQuery);
+      res.status(200).json({message: 'Success'});
+    } catch (error) {
+      console.log(error);
+      handleError(error, res);
+    }
+  })();
+});
+
+router.put('/', authCheck, (req,res) => {
+  (async function(){
+    try {
+      const sqlReq = new sql.Request();
+      sqlReq.input('ExamDate', req.body.ExamDate);
+      sqlReq.input('Classroom', req.body.Classroom);
+      sqlReq.input('ExamID', req.body.ExamID);
+    
+      const sqlQuery = `UPDATE Exams 
+      SET ExamDate = @ExamDate, Classroom = @Classroom 
+      WHERE ExamID = @ExamID`;
+      const result = await sqlReq.query(sqlQuery);
+      res.status(200).json({message: 'Success'});
+    } catch (error) {
+      console.log(error);
+      handleError(error, res);
+    }
+  })();
+});
+
+router.delete('/:examID', authCheck, (req,res) => {
+  (async function(){
+    try {
+      const sqlReq = new sql.Request();
+      sqlReq.input('ExamID', req.params.examID);
+    
+      const sqlQuery = `DELETE FROM Exams 
+      WHERE ExamID = @ExamID`;
+      const result = await sqlReq.query(sqlQuery);
+      res.status(200).json({message: 'Success'});
+    } catch (error) {
+      console.log(error);
       handleError(error, res);
     }
   })();
