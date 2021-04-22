@@ -7,6 +7,7 @@ const studentRouter = require('./routes/student/student.router');
 const classesRouter = require('./routes/classes/classes.router');
 const teacherRouter = require('./routes/teacher/teacher.router');
 const examsRouter = require('./routes/exams/exams.router');
+const notificationsRouter = require('./routes/notifications/notifications.router');
 
 const app = express();
 
@@ -37,5 +38,6 @@ app.use('/api/student', studentRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/teacher', teacherRouter);
 app.use('/api/exams', examsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 module.exports = app;
