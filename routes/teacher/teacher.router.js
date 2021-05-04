@@ -7,6 +7,20 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
 
+// GET ALL TEACHERS
+router.get('/', authCheck, (req, res) => {
+  (async function() {
+    try {
+      const sqlRequest = new sql.Request();
+      const sqlQuery = "SELECT TeacherId, Name, Email, Office, Active FROM Teachers WHERE Email <> 'superadmin@fikt.com'";
+      const result = await sqlRequest.query(sqlQuery);
+      res.status(200).json(result.recordset)
+    } catch (error) {
+      handleError(error, res);
+    }
+  })()
+});
+
 // ADD NEW TEACHER
 router.post('/', authCheck, (req, res) => {
   (async function(){
@@ -24,6 +38,47 @@ router.post('/', authCheck, (req, res) => {
       const result = await sqlRequest.query(sqlQuery);
       res.status(201).json(result);
     } catch (error) {
+      handleError(error, res);
+    }
+  })()
+});
+
+// EDIT TEACHER
+router.put('/', authCheck, (req, res) => {
+  (async function(){
+    try {
+      const sqlRequest = new sql.Request();
+      sqlRequest.input('id', req.body.TeacherId);
+      sqlRequest.input('name', req.body.Name);
+      sqlRequest.input('email', req.body.Email);
+      sqlRequest.input('office', req.body.Office);
+      const sqlQuery = `
+        UPDATE Teachers SET  Name = @name, Email = @email, Office = @office
+        WHERE TeacherId = @id;
+      `;
+      const result = await sqlRequest.query(sqlQuery);
+      res.status(201).json({message: 'Success'});
+    } catch (error) {
+      handleError(error, res);
+    }
+  })()
+});
+
+// CHANGE TEACHER Status
+router.put('/status', authCheck, (req, res) => {
+  (async function(){
+    try {
+      const sqlRequest = new sql.Request();
+      sqlRequest.input('id', req.body.TeacherId);
+      sqlRequest.input('status', req.body.Active)
+      const sqlQuery = `
+        UPDATE Teachers SET Active = @status
+        WHERE TeacherId = @id;
+      `;
+      const result = await sqlRequest.query(sqlQuery);
+      res.status(201).json({message: 'Success'});
+    } catch (error) {
+      console.log(error)
       handleError(error, res);
     }
   })()

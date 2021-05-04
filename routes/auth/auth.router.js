@@ -205,7 +205,7 @@ router.post('/teacher/login', (req, res) => {
       `;
       const result = await sqlRequest.query(query);
       if (result.recordset) {
-        if (await bcrypt.compare(req.body.Password, result.recordset[0].Password)) {
+        if (await bcrypt.compare(req.body.Password, result.recordset[0].Password) && result.recordset[0].Active) {
           const token = jwt.sign({Name: result.recordset[0].Name, Email: result.recordset[0].Email, UserID: result.recordset[0].TeacherId, Office: result.recordset[0].Office}, process.env.SECRET_KEY, {expiresIn: '1h'});
           const refreshToken = jwt.sign({Email: result.recordset[0].Email, PublicKey: result.recordset[0].Password, Type: '0'}, process.env.SECRET_KEY, {expiresIn: '24h'});
           res.status(200).json({token: token, refreshToken: refreshToken});
