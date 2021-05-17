@@ -4,15 +4,36 @@ const sql = require('mssql');
 const authCheck = require('../../middleware/auth-check');
 const jwt = require('jsonwebtoken');
 
-router.get('/', authCheck, (req, res) =>{
+router.get('/all', authCheck, (req, res) =>{
   (async function(){
     try {
       const sqlRequest = new sql.Request();
       const sqlQuery = `
-        SELECT * FROM Classes;
+        SELECT 
+          c.Name,
+          c.Code,
+          c.Classroom,
+          t.TeacherId,
+          t.Name AS 'TeacherName',
+          t.Active AS 'Active'
+        FROM Classes as c
+          inner join TeacherClasses as tc on (tc.ClassCode = c.Code)
+          inner join Teachers as t on (t.TeacherId = tc.TeacherId)
       `;
+
       const result = await sqlRequest.query(sqlQuery);
-      res.status(200).json(result.recordset);
+      const responseBody = [];
+      result.recordset.forEach( r => {
+        r.Teacher = {};
+        r.Teacher.Name = r.TeacherName;
+        r.Teacher.TeacherId = r.TeacherId;
+        r.Teacher.Active = r.Active;
+        delete r.TeacherName;
+        delete r.TeacherId;
+        delete r.Active;
+        responseBody.push(r);
+      });
+      res.status(200).json(responseBody);
     } catch (error) {
       res.status(500).json(error.originalError.info.message);
     }

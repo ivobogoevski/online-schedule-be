@@ -23,6 +23,7 @@ router.get('/', authCheck, (req,res) => {
       c.Code AS 'Code',
       t.Name AS 'TeacherName',
       t.TeacherId AS 'TeacherId',
+      t.Active AS 'Active',
       e.ExamType AS 'ExamType',
       e.ExamDate as 'Date',
       e.Classroom as 'Classroom'
@@ -36,23 +37,26 @@ router.get('/', authCheck, (req,res) => {
       s.ID = @userId`;
     
     const result = await sqlReq.query(sqlQuery);
-    const response = [];
+    const responseBody = [];
+    const todayDate = new Date().valueOf();
     result.recordset.forEach( r => {
-      r.Teacher = {};
-      r.Teacher.Name = r.TeacherName;
-      r.Teacher.TeacherId = r.TeacherId;
-      r.Exam = {};
-      r.Exam.Classroom = r.Classroom;
-      r.Exam.ExamDate = r.Date;
-      r.Exam.ExamType = r.ExamType;
-      delete r.TeacherName;
-      delete r.TeacherId;
-      delete r.Classroom;
-      delete r.Date;
-      delete r.ExamType;
-      response.push(r);
+      if(r.Date >= todayDate && r.Active) {
+        r.Teacher = {};
+        r.Teacher.Name = r.TeacherName;
+        r.Teacher.TeacherId = r.TeacherId;
+        r.Exam = {};
+        r.Exam.Classroom = r.Classroom;
+        r.Exam.ExamDate = r.Date;
+        r.Exam.ExamType = r.ExamType;
+        delete r.TeacherName;
+        delete r.TeacherId;
+        delete r.Classroom;
+        delete r.Date;
+        delete r.ExamType;
+        responseBody.push(r);
+      }
     });
-    res.status(200).json(response);
+    res.status(200).json(responseBody);
     } catch (error) {
       handleError(error, res);
     }
